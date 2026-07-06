@@ -8,10 +8,32 @@
 from django.core.exceptions import PermissionDenied
 from django.http import Http404
 from rest_framework import exceptions
+from rest_framework.response import Response
 from rest_framework.views import exception_handler as drf_exception_handler
 
 
+class DomainError(Exception):
+    """Service Layer의 도메인 규칙 위반. 통일 오류 포맷으로 매핑된다."""
+
+    code = "domain_error"
+    status_code = 400
+
+    def __init__(self, message, *, code=None, status_code=None, details=None):
+        super().__init__(message)
+        if code is not None:
+            self.code = code
+        if status_code is not None:
+            self.status_code = status_code
+        self.details = details
+
+
 def exception_handler(exc, context):
+    if isinstance(exc, DomainError):
+        return Response(
+            {"error": {"code": exc.code, "message": str(exc), "details": exc.details}},
+            status=exc.status_code,
+        )
+
     # DRF 기본 핸들러와 동일한 예외 변환을 적용해 code 매핑을 일관되게 유지한다.
     if isinstance(exc, Http404):
         exc = exceptions.NotFound()

@@ -7,7 +7,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 VERSION = "0.1.0"
 
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "insecure-dev-only-key")
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY", "insecure-dev-only-key-do-not-use-in-production-0000"
+)
 
 DEBUG = False
 
@@ -22,7 +24,17 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "core",
+    "apps.accounts",
+    "apps.companies",
+    "apps.projects",
+    "apps.interview",
+    "apps.requirements",
+    "apps.knowledge",
+    "apps.design",
+    "apps.audit",
 ]
+
+AUTH_USER_MODEL = "accounts.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -85,6 +97,12 @@ REST_FRAMEWORK = {
     # API 오류 응답 형식 통일 (PRD §33-19): {"error": {"code", "message", "details"}}
     "EXCEPTION_HANDLER": "core.exceptions.exception_handler",
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
 }

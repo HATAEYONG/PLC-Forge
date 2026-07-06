@@ -29,3 +29,33 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 1 (Core Domain) 착수 — TASKS.md를 Phase 1 작업으로 갱신 예정
+
+## 2026-07-06 — Phase 1: Core Domain (사용자 승인 후 착수)
+- **T1.1** `apps.accounts` 커스텀 User(UUID PK, PRD §4 역할 7종) + SimpleJWT
+  (`/api/auth/token/`, `/refresh/`, `/me/`), 기본 권한 IsAuthenticated (D1: JWT 확정)
+- **T1.2** `apps.companies` Company CRUD
+- **T1.3** `apps.projects` Project CRUD (company FK, code unique, 상태 7종, created_by 자동)
+- **T1.4** `apps.interview` Question(§8.2 전체 필드 + §8.3/§8.4 choices, (code,version) unique,
+  answer_schema JSON Schema 검증), AnswerOption, InterviewSession,
+  `POST /sessions/{id}/answer/` (Service Layer 경유, 진행 중이 아닌 세션은 409)
+- **T1.5** `apps.requirements` ProjectFact(§10) + FactStatus 상태기계
+  (서비스에서 전이 강제, 위반 시 409 invalid_fact_transition),
+  동일 key 재생성 시 version 증가 + 이전 활성 Fact SUPERSEDED,
+  ProjectState Projection selector
+- **T1.6** `apps.knowledge` KnowledgeItem(§11, 8계층) CRUD
+- **T1.7** `apps.design` Rule(§12, HARD/RECOMMENDATION) + DesignDecision(§13,
+  M2M 조인 테이블 Traceability). **근거(입력 Fact/규칙/지식) 0개 또는 reason 없으면 생성 거부.**
+  HIGH/CRITICAL risk는 approval_required 자동 설정
+- **T1.8** `apps.audit` AuditEvent(§25) + `record_event()` — Fact 생성/전이, 답변 제출,
+  Decision 생성 시 기록. API는 읽기 전용
+- **T1.9** 라우터 배선(§29 경로), 페이지네이션(20), DomainError→통일 오류 포맷 매핑
+
+### 검증 결과 (컨테이너 내 실측)
+- pytest **35 passed** (인증 3, 회사 2, 프로젝트 2, 질문 4, 세션 3, Fact 6, 지식 1, 규칙 1,
+  Decision 5, 감사 2, Phase 0 기존 6), ruff clean, `makemigrations --check` clean
+- 실서버 스모크: JWT 발급 → Bearer로 Company 생성/조회(한글 정상) → 미인증 요청이
+  통일 오류 포맷 401 반환
+- AUTH_USER_MODEL 변경으로 개발 DB 재생성 (운영 데이터 없음, 문제 없음)
+
+### 다음 단계
+- 사용자 승인 후 Phase 2 (Question Engine) 착수

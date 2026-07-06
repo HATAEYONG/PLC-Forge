@@ -59,3 +59,37 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 2 (Question Engine) 착수
+
+## 2026-07-06 — Phase 2: Question Engine (사용자 승인 후 착수)
+- **T2.1** `core/jsonlogic.py` — 최소 JSONLogic 평가기(var/비교/and·or·!/in/missing) (D4 확정).
+  Question 조건과 Rule 조건이 공용
+- **T2.2** 후보 필터링 — is_active + 미답변 + required/exclusion + 업종/공정 적용성
+- **T2.3** 질문 점수화(§8.5) — 8개 가점 요소 + 3개 감점 요소, 가중치 상수화(콜드스타트, R3)
+- **T2.4** `QuestionSelectionLog` + `GET /next-question/` — 최고점 질문 + 점수 내역·선택 이유 저장
+- **T2.5** 종료조건(§8.6) `completion.py` — Critical/Safety 커버리지 + 설계별 필수 Fact +
+  미해결 충돌 없음. 미충족 시 계속 질문, `POST /complete/`는 미충족 시 409
+- **T2.6** Answer Processing 파이프라인(§9, Rule-based, LLM 미사용):
+  Validation(JSON Schema) → Normalization → Unit Conversion(℃/℉) →
+  한국어 Entity Extraction(정규식) → Fact Generation(confidence) →
+  Contradiction Detection(상충 시 양쪽 CONFLICTED) → Projection
+- **T2.7** 세션 API 확장 — `/next-question/ /facts/ /state/ /progress/ /complete/`,
+  답변 응답에 생성 Fact 포함
+- **T2.8** 초기 질문 데이터 **60개**(식품·수처리 우선, PRD §28 Phase 1 목표 50개 초과 달성)
+  + `load_questions` 관리 명령(idempotent). ⚠️ SAFETY/INTERLOCK 질문 8종은 전문가 검토 대상(D6)
+
+### 검증 결과 (컨테이너 내 실측)
+- pytest **67 passed**, ruff clean, 마이그레이션 drift 없음
+- 핵심 시나리오 테스트(LLM 미사용): "탱크가 3개 있고 그중 두 개는 80도 정도이며 세척할 때
+  증기가 생깁니다" → TANK_COUNT=3, HEATED_TANK_COUNT=2, MAX_TEMPERATURE_APPROX=80C,
+  CIP_REQUIRED=True, STEAM_PRESENT_DURING_CIP=True
+- 라이브 스모크: 첫 next-question이 CRITICAL 안전 질문(Q-SAF-001)을 점수근거
+  "핵심 정보 누락(+100), 기본 우선순위(+95), 안전 위험 탐지(+40)"와 함께 선택,
+  자연어 답변에서 Fact 6종 추출 후 Projection 반영 확인
+- 참고: 세션 중 컨테이너의 PostgreSQL가 재기동되었으나 pgdata 볼륨으로 데이터 보존됨
+
+### ⚠️ 사용자 검토 요청 (D6, PRD §33-5)
+- 초기 질문 데이터의 **안전 관련 질문 8종**(Q-SAF-001~004, Q-ILK-001, Q-ALM-003 등)은
+  자동화 전문가 검토 후 확정 필요. `backend/apps/interview/questions_seed.py` 참조
+
+### 다음 단계
+- 사용자 승인 후 Phase 3 (Knowledge & Rule Engine) 착수

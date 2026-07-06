@@ -135,3 +135,18 @@ class InterviewAnswer(BaseModel):
 
     class Meta:
         ordering = ["created_at"]
+
+
+class QuestionSelectionLog(BaseModel):
+    """Question Engine의 질문 선택 이유 기록 (PRD §8.5 '선택 이유를 저장한다')."""
+
+    session = models.ForeignKey(
+        InterviewSession, on_delete=models.CASCADE, related_name="selection_logs"
+    )
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="selection_logs")
+    total_score = models.FloatField()
+    score_breakdown = models.JSONField(default=dict)
+    reason = models.TextField(blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]

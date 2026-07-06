@@ -28,9 +28,16 @@ def create_fact(
     source_type,
     source_answer=None,
     confidence=1.0,
+    initial_status=FactStatus.PROPOSED,
+    supersede_active=True,
     actor=None,
 ):
-    """Fact를 생성한다. 동일 fact_key의 활성 Fact는 SUPERSEDED 처리하고 버전을 올린다."""
+    """Fact를 생성한다.
+
+    supersede_active=True(기본)이면 동일 fact_key의 활성 Fact를 SUPERSEDED 처리한다.
+    모순 감지 경로에서는 supersede_active=False + initial_status=CONFLICTED로
+    양쪽 Fact를 충돌 상태로 남긴다 (PRD §9 Contradiction Detection).
+    """
     existing = (
         ProjectFact.objects.select_for_update()
         .filter(project=project, fact_key=fact_key)
@@ -39,9 +46,10 @@ def create_fact(
     latest = existing.first()
     version = (latest.version + 1) if latest else 1
 
-    for fact in existing.filter(status__in=ACTIVE_STATUSES):
-        fact.status = FactStatus.SUPERSEDED
-        fact.save(update_fields=["status", "updated_at"])
+    if supersede_active:
+        for fact in existing.filter(status__in=ACTIVE_STATUSES):
+            fact.status = FactStatus.SUPERSEDED
+            fact.save(update_fields=["status", "updated_at"])
 
     fact = ProjectFact.objects.create(
         project=project,
@@ -52,6 +60,7 @@ def create_fact(
         source_type=source_type,
         source_answer=source_answer,
         confidence=confidence,
+        status=initial_status,
         version=version,
     )
     record_event(

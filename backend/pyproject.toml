@@ -1,0 +1,19 @@
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py"]
+testpaths = ["core", "apps"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # bugbear
+    "UP",  # pyupgrade
+    "DJ",  # flake8-django
+]

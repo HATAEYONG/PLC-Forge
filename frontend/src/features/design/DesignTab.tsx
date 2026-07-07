@@ -79,6 +79,23 @@ export default function DesignTab({ projectId }: { projectId: string }) {
     }
   }
 
+  async function generateVendor() {
+    setBusy(true)
+    setError(null)
+    setMsg(null)
+    try {
+      const res = await api.post<{ vendor: string; mapping_report: { signal_count: number } }>(
+        `/api/projects/${projectId}/vendor-generate/?vendor=ls`,
+      )
+      setMsg(`${res.vendor} 코드 생성 완료 (신호 ${res.mapping_report.signal_count}개, ST+CSV 6종)`)
+    } catch (err) {
+      // CRITICAL 차단 시 여기서 오류 메시지 노출
+      setError(err instanceof Error ? err.message : '벤더 코드 생성 실패')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   if (!data) return <p className="muted">불러오는 중…</p>
 
   const io = data.io
@@ -101,6 +118,9 @@ export default function DesignTab({ projectId }: { projectId: string }) {
               }
             >
               ⬇ Excel Export
+            </button>
+            <button className="btn secondary" onClick={generateVendor} disabled={busy}>
+              LS 코드 생성
             </button>
             <button className="btn" onClick={run} disabled={busy}>
               {busy ? '생성 중…' : '규칙 적용 + 설계 생성'}

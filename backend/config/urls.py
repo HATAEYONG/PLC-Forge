@@ -23,5 +23,6 @@ urlpatterns = [
     path("api/", include("apps.validation.urls")),
     path("api/", include("apps.approvals.urls")),
     path("api/", include("apps.documents.urls")),
+    path("api/", include("apps.generators.urls")),
     path("api/", include("apps.audit.urls")),
 ]

@@ -1,24 +1,34 @@
-# TASKS.md — Phase 6-C: Excel Export · E2E 정식화
+# TASKS.md — Phase 7: LS ELECTRIC Adapter PoC (마지막)
 
-**목표:** 설계 산출물을 Excel(.xlsx)로 내보내고(MVP 26번), 프론트 Export 버튼과
-Playwright E2E 해피패스를 CI에 편입한다. (이전 내역은 WORKLOG.md 참조)
+**목표:** Vendor Independent IR(§20)을 만들고, LS ELECTRIC Adapter(§21)로 ST + CSV +
+Vendor Mapping Report를 생성한다. CRITICAL Finding 시 생성 차단(§22). (이전 내역은 WORKLOG.md)
 
-## T6C.1 documents 앱 — Excel Export (백엔드)
-- `openpyxl` 기반 워크북 생성: I/O List / Alarm / Interlock / Cause&Effect / FAT / SAT 시트
-- `GET /api/projects/{id}/export/` → .xlsx 스트리밍(한글 파일명, UTF-8)
-- ✓ 시트 구성·행수·한글 셀 테스트
+## T7.1 Vendor Independent IR (§20)
+- `generators/ir.py` — build_ir(project): ProjectMetadata/DeviceDefinitions/SignalDefinitions/
+  DataTypes/Alarms/Interlocks/Sequences/HMITags/TestRequirements/LogicExpressions
+- IR_SCHEMA(JSON Schema) + validate_ir()
+- §20 연산(ADD~CONTROL_FLOW) 표현 가능
+- ✓ IR 빌드/스키마 검증 테스트
 
-## T6C.2 프론트 Export 버튼
-- 설계 탭 또는 별도 위치에 Export 버튼 → 인증 토큰 포함 다운로드
-- ✓ 다운로드 트리거 테스트(모킹)
+## T7.2 Adapter 인터페이스 (§21)
+- `adapters/base.py` — VendorAdapter ABC: validate_ir/map_data_types/map_addresses/
+  map_instructions/generate_program_structure/generate_tags/generate_alarm_mapping/
+  generate_hmi_tags/generate_test_artifacts/package_output
+- ✓ ABC 계약 테스트
 
-## T6C.3 Playwright E2E 정식화
-- `@playwright/test` devDependency + playwright.config(신형 headless, executablePath)
-- 해피패스: 로그인 → 프로젝트 → 인터뷰 → 설계 생성 → 검증 → 승인 → Export
-- `npm run e2e` 스크립트, CI 잡 추가(백엔드 postgres + 서버 기동)
+## T7.3 LS ELECTRIC Adapter
+- `adapters/ls_electric.py` — XGB 주소 매핑(%IX/%QX/%IW/%QW), BOOL/INT/REAL 데이터타입,
+  ST 프로그램 구조(알람 검출 + 인터록 로직), Tag/IO/Alarm/HMI Tag CSV, Mapping Report
+- ✓ 주소/데이터타입 매핑, ST 생성, CSV 생성 테스트
 
-## Phase 6-C Exit Checklist
-- [ ] 백엔드 pytest green(Export 포함), 프론트 vitest/lint/build green
-- [ ] .xlsx 다운로드 동작(시트 구성 확인)
-- [ ] Playwright 해피패스 통과 + CI 편입
-- [ ] WORKLOG.md 갱신 + 사용자 승인 → Phase 7
+## T7.4 생성 서비스 + API (CRITICAL 차단)
+- `services.generate_vendor_package(project, vendor)` — assert_generation_allowed 게이트
+- `POST /api/projects/{id}/vendor-generate/?vendor=ls` → 파일 묶음 + report
+- validate_ir 실패 시 생성 중단
+- ✓ CRITICAL 차단 테스트, end-to-end 생성 테스트
+
+## Phase 7 Exit Checklist
+- [ ] 전체 pytest green, ruff clean, 마이그레이션 drift 없음
+- [ ] IR 스키마 검증 + LS ST/CSV/Report 생성
+- [ ] CRITICAL Finding 시 어댑터 실행 차단
+- [ ] WORKLOG.md 갱신 — PRD Phase 0~7 전체 완성 보고

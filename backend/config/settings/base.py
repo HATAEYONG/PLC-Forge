@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.validation",
     "apps.approvals",
     "apps.documents",
+    "apps.generators",
     "apps.audit",
 ]
 

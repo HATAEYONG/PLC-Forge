@@ -78,5 +78,29 @@ make lint    # ruff + eslint + prettier + tsc
 
 ## 현재 상태
 
-**Phase 0 (Repository Bootstrap) 완료 — Phase 1 (Core Domain) 착수 대기.**
-진행 내역은 `WORKLOG.md`, 다음 단계 결정 사항은 `DECISIONS_REQUIRED.md` 참조.
+**PRD Phase 0~7 전체 완성 (MVP).** 적응형 인터뷰 → 요구사항 구조화 → 자율설계(13종
+산출물) → 검증(CRITICAL 차단) → Human Approval → LS ELECTRIC 코드 생성(IR→ST/CSV) →
+Excel Export까지 백엔드·프론트·E2E로 검증됨. 진행 내역은 `WORKLOG.md` 참조.
+
+### 주요 API
+
+```
+POST /api/auth/token/                          JWT 발급
+POST /api/interview/sessions/{id}/answer/      답변 → Fact 구조화
+GET  /api/interview/sessions/{id}/next-question/  적응형 다음 질문
+POST /api/projects/{id}/apply-rules/           규칙 엔진
+POST /api/projects/{id}/generate-design/       설계 생성(stage=sensor|io|plc|comm|hmi|alarm|sequence|test|all)
+GET  /api/projects/{id}/cause-effect-matrix/   Cause & Effect
+POST /api/projects/{id}/validate/              검증(§22)
+POST /api/projects/{id}/submit-review/         승인 요청(§23)
+GET  /api/projects/{id}/export/                Excel(.xlsx)
+POST /api/projects/{id}/vendor-generate/?vendor=ls   LS ELECTRIC ST/CSV
+```
+
+### 관리 명령 (초기 데이터)
+
+```bash
+python manage.py load_questions    # 적응형 질문 60개
+python manage.py load_knowledge    # 지식베이스 35건
+python manage.py load_rules        # 규칙(§12 예시 포함)
+```

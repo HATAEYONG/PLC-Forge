@@ -79,6 +79,17 @@ def test_full_traceability_chain(project):
 
 
 @pytest.mark.django_db
+def test_generate_design_minimal_facts_does_not_crash(project):
+    """근거 Fact가 거의 없어도 생성기가 Traceability 오류 없이 건너뛴다 (회귀)."""
+    from apps.design.orchestrator import generate_design
+
+    set_fact(project, "CONTROL_MODE", "MANUAL", ValueType.STRING)
+    summary = generate_design(project=project, stage="all")
+    assert summary["io"].get("skipped") is True
+    assert summary["comm"].get("skipped") is True
+
+
+@pytest.mark.django_db
 def test_unknown_stage_rejected(api_client, project):
     response = api_client.post(f"/api/projects/{project.id}/generate-design/?stage=nonsense")
     assert response.status_code == 400

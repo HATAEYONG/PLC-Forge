@@ -63,6 +63,10 @@ def size_plc(*, project, actor=None):
     """I/O 집계 + §15 요소로 PLC 등급/후보를 산출한다 (idempotent)."""
     project.plc_sizing_results.all().delete()
 
+    # I/O가 없으면 PLC를 산정할 근거가 없다 → 건너뛴다.
+    if not project.io_points.exists():
+        return None
+
     flat = _flat_state(project)
     counts = _io_counts(project)
     margin = 20

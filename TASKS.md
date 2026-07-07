@@ -1,40 +1,41 @@
-# TASKS.md — Phase 4-C: Design Engine (Alarm · Interlock · Sequence · FAT/SAT)
+# TASKS.md — Phase 5: Validation & Approval
 
-**목표:** 규칙이 만든 알람/인터록 요구를 구조화하고, 시퀀스와 FAT/SAT 테스트를 생성한다.
-Phase 4(Design Engine) 완성. (이전 내역은 WORKLOG.md 참조)
+**목표:** 설계 산출물을 검증(§22)하고, CRITICAL Finding 시 Vendor Generation을 차단하며,
+승인 워크플로(§23)를 구현한다. (이전 내역은 WORKLOG.md 참조)
 
-## T4C.1 alarms 앱 — Alarm (§18)
-- `Alarm`: code/source/condition/delay/priority/message/operator_action/reset_type/
-  latching/related_interlock/fat_test_required/sat_test_required (+ decision FK)
-- ALARM_REQUIREMENT 결정 + CRITICAL_ALARMS Fact → 구조화 Alarm
-- ✓ 알람 생성·근거 추적 테스트
+## T5.1 validation 앱 — ValidationFinding (§22)
+- `ValidationFinding`: severity(INFO/WARNING/ERROR/CRITICAL)/code/title/description/
+  related_objects/recommended_action/status
+- ✓ 모델·상태 테스트
 
-## T4C.2 interlocks 앱 — Interlock (§18) + Cause & Effect
-- `Interlock`: code/protected_device/condition/effect/reset_condition/bypass_allowed/
-  bypass_permission/safety_related/reason/fat_test_required/sat_test_required
-- INTERLOCK_REQUIREMENT 결정 + ESTOP/INTERLOCK_REQUIREMENTS Fact → 구조화 Interlock
-- Cause & Effect Matrix selector(알람+인터록 기반)
-- ✓ 인터록 생성, safety_related 시 bypass 권한 필수, C&E 매트릭스 테스트
+## T5.2 Validation Engine — 검사기 (§22)
+- 검사 항목(각 함수): Missing Requirement / Missing Sensor / I/O Consistency /
+  Duplicate Tag / Signal Type Mismatch / PLC Capacity / Alarm Coverage /
+  Interlock Coverage / Sequence Dead-End / Sequence Timeout / Unsafe Bypass /
+  FAT Coverage / SAT Coverage / Traceability Coverage
+- `run_validation(project)` — 전 검사 실행 → ValidationFinding 갱신(idempotent)
+- ✓ 각 검사 양성/음성 테스트
 
-## T4C.3 sequences 앱 — Sequence (§19)
-- `Sequence` + `SequenceStep`: entry_condition/actions/completion_condition/timeout/
-  timeout_alarm/abort_condition/hold_condition/resume_condition/next_step/fallback_step
-- CONTROL_MODE AUTO/SEMI + SEQUENCE_OUTLINE → Vendor Independent 시퀀스 초안
-- ✓ 시퀀스 스텝 생성, 타임아웃 알람 연계 테스트
+## T5.3 CRITICAL 차단 (§22, §33-14)
+- `assert_generation_allowed(project)` — CRITICAL Finding 있으면 DomainError(409)
+- `POST /projects/{id}/validate/`, `GET /projects/{id}/validation-findings/`
+- ✓ CRITICAL 존재 시 vendor generation 차단 테스트
 
-## T4C.4 fat_sat 앱 — FAT/SAT Test (§24)
-- `FatTestCase`/`SatTestCase`: test_id/category/precondition/procedure/expected_result/
-  actual_result/status/evidence/tester/reviewer + source 역추적
-- 요구·센서·알람·인터록·시퀀스 → 테스트 자동 생성 (알람 시뮬, 인터록 트립, 센서 검증 등)
-- ✓ 커버리지: 각 알람/인터록이 FAT/SAT 테스트로 커버됨, 원 요구 역추적
+## T5.4 approvals 앱 — Approval Workflow (§23)
+- `Approval`: target(11종)/status(DRAFT→IN_REVIEW→APPROVED/REJECTED/SUPERSEDED)/
+  approver/reason + ApprovalHistory
+- 상태기계 강제(건너뛰기 거부), Safety 대상은 승인 없이 확정 불가
+- 모든 승인/거절 AuditEvent 기록
+- ✓ 상태 전이 허용/거부, 감사 기록 테스트
 
-## T4C.5 오케스트레이션 확장
-- STAGE_ORDER: ...→alarm→sequence→test, 읽기 API + C&E 매트릭스 엔드포인트
-- ✓ generate-design?stage=all end-to-end (전체 13종 산출물)
+## T5.5 Review Queue + API
+- `GET /projects/{id}/approvals/`, `POST .../submit-review/`, 승인/거절 액션
+- CRITICAL Finding 있으면 최종 승인(Vendor Code Generation 등) 차단
+- ✓ 리뷰 큐 + 승인 API 테스트
 
-## Phase 4-C Exit Checklist
+## Phase 5 Exit Checklist
 - [ ] 전체 pytest green, ruff clean, 마이그레이션 drift 없음
-- [ ] Cause & Effect Matrix가 알람+인터록에서 도출됨
-- [ ] FAT/SAT가 알람·인터록·시퀀스로부터 생성되고 원 요구로 역추적됨
-- [ ] Safety 인터록은 bypass 권한/기록 정책 포함
-- [ ] WORKLOG.md 갱신 + 사용자 승인 → Phase 5 (Validation & Approval)
+- [ ] §22 각 검사 항목 양성/음성 테스트
+- [ ] CRITICAL Finding 시 Vendor Generation 차단 (핵심)
+- [ ] Approval 상태기계 강제 + Safety 승인 필수
+- [ ] WORKLOG.md 갱신 + 사용자 승인 → Phase 6

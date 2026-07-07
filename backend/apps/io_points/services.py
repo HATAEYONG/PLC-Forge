@@ -58,9 +58,17 @@ def estimate_io(*, project, actor=None):
     if isinstance(devices, str):
         devices = [devices]
 
-    device_fact = list(
+    sensor_reqs = list(project.sensor_requirements.all())
+    # 설비도 센서도 없으면 I/O를 산출할 근거가 없다 → 건너뛴다.
+    if not devices and not sensor_reqs:
+        return {"counts": dict.fromkeys(["DI", "DO", "AI", "AO"], 0), "total": 0, "skipped": True}
+
+    # Traceability: I/O 산출의 근거가 된 Fact(설비 목록/측정 요구)
+    source_facts = list(
         ProjectFact.objects.filter(
-            project=project, fact_key="DEVICE_LIST", status__in=ACTIVE_STATUSES
+            project=project,
+            fact_key__in=["DEVICE_LIST", "MEASUREMENT_REQUIREMENTS"],
+            status__in=ACTIVE_STATUSES,
         )
     )
 
@@ -70,7 +78,7 @@ def estimate_io(*, project, actor=None):
         subject_type="IO_LIST",
         decision_value={"device_count": len(devices)},
         reason="설비 목록과 센서 요구사항으로 I/O를 산출",
-        input_facts=device_fact,
+        input_facts=source_facts,
         risk_level=RiskLevel.LOW,
         actor=actor,
     )

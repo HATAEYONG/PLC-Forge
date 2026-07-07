@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "apps.interlocks",
     "apps.sequences",
     "apps.fat_sat",
+    "apps.validation",
+    "apps.approvals",
     "apps.audit",
 ]
 

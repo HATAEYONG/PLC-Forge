@@ -59,6 +59,10 @@ def generate_communication(*, project, actor=None):
             "PREFERRED_PROTOCOL",
         ],
     )
+    # 통신 구성의 근거가 되는 Fact가 하나도 없으면 네트워크를 구성할 수 없다 → 건너뛴다.
+    if not facts:
+        return {"nodes": 0, "links": 0, "protocol_requirements": [], "skipped": True}
+
     decision = create_design_decision(
         project=project,
         decision_type="COMMUNICATION_DESIGN",

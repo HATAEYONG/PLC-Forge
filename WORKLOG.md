@@ -187,3 +187,26 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 5 (Validation & Approval) 착수
+
+## 2026-07-07 — Phase 5: Validation & Approval
+- **T5.1~T5.2** `validation` 앱 — ValidationFinding(§22) + Validation Engine 13종 검사
+  (Missing Requirement/Sensor, I/O 일관성, 중복태그, 신호타입, PLC 용량, 알람·인터록
+  커버리지, 시퀀스 dead-end·unreachable·timeout, unsafe bypass, FAT/SAT 커버리지,
+  Traceability gap). `run_validation` idempotent
+- **T5.3** CRITICAL 차단 게이트 `assert_generation_allowed` — CRITICAL Finding 시 409,
+  `POST /projects/{id}/validate/`, `GET /validation-findings/`
+- **T5.4** `approvals` 앱 — Approval(§23, 11대상) + ApprovalHistory, 상태기계
+  (DRAFT→IN_REVIEW→APPROVED/REJECTED/SUPERSEDED, 건너뛰기 거부),
+  Vendor 생성/릴리스 승인은 CRITICAL 검증 게이트 통과 필수, 전 승인 AuditEvent 기록
+- **T5.5** Review Queue API — submit-review / approve / reject
+- **버그 수정**: generate_communication·estimate_io·size_plc가 근거 Fact/I/O가 없을 때
+  Traceability 없는 결정을 만들려다 실패하던 문제 → 입력 없으면 건너뛰도록 가드 + 회귀 테스트
+
+### 검증 결과 (컨테이너 내 실측)
+- pytest **130 passed**, ruff clean, 마이그레이션 drift 없음
+- 라이브 end-to-end: 인터록 미충족 → CRITICAL로 Vendor 승인 차단
+  (critical_findings_block_generation) → generate-design(all)로 인터록 materialize →
+  재검증 CRITICAL 0 → Vendor 승인 APPROVED. 승인 상태기계·감사 기록 확인
+
+### 다음 단계
+- 사용자 승인 후 Phase 6 (Frontend) 착수

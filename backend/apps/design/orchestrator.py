@@ -35,10 +35,14 @@ def generate_design(*, project, stage="all", actor=None):
             summary["io"] = estimate_io(project=project, actor=actor)
         elif current == "plc":
             sizing = size_plc(project=project, actor=actor)
-            summary["plc"] = {
-                "required_class": sizing.required_class,
-                "candidates": sizing.candidates.count(),
-            }
+            summary["plc"] = (
+                {"skipped": True}
+                if sizing is None
+                else {
+                    "required_class": sizing.required_class,
+                    "candidates": sizing.candidates.count(),
+                }
+            )
         elif current == "comm":
             summary["comm"] = generate_communication(project=project, actor=actor)
         elif current == "hmi":

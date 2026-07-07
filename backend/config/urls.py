@@ -20,5 +20,7 @@ urlpatterns = [
     path("api/", include("apps.interlocks.urls")),
     path("api/", include("apps.sequences.urls")),
     path("api/", include("apps.fat_sat.urls")),
+    path("api/", include("apps.validation.urls")),
+    path("api/", include("apps.approvals.urls")),
     path("api/", include("apps.audit.urls")),
 ]

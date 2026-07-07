@@ -1,7 +1,12 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from apps.design.views import ApplyRulesView, DesignDecisionViewSet, RuleViewSet
+from apps.design.views import (
+    ApplyRulesView,
+    DesignDecisionViewSet,
+    GenerateDesignView,
+    RuleViewSet,
+)
 
 router = DefaultRouter()
 router.register("rules", RuleViewSet)
@@ -13,5 +18,10 @@ urlpatterns = [
         "projects/<uuid:project_pk>/apply-rules/",
         ApplyRulesView.as_view({"post": "create"}),
         name="project-apply-rules",
+    ),
+    path(
+        "projects/<uuid:project_pk>/generate-design/",
+        GenerateDesignView.as_view({"post": "create"}),
+        name="project-generate-design",
     ),
 ]

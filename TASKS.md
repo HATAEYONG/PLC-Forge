@@ -1,52 +1,41 @@
-# TASKS.md — Phase 3: Knowledge & Rule Engine
+# TASKS.md — Phase 4-A: Design Engine (Sensor · I/O · PLC Sizing)
 
-**목표:** 선언형 규칙(conditions_json)을 프로젝트 상태에 매칭하고, 효과(effects_json)를
-Traceability 있는 DesignDecision으로 실행한다. Hard/Recommendation을 구분하고 충돌을
-탐지한다. §27 초기 지식 데이터를 적재한다.
-(이전 Phase 내역은 WORKLOG.md 참조)
+**목표:** 규칙이 만든 요구/추천과 ProjectFact를 실제 설계 산출물로 구체화한다.
+각 산출물은 DesignDecision(Traceability)로 근거를 남긴다. (이전 내역은 WORKLOG.md 참조)
 
-## T3.1 Effect 어휘 + Executor (`design/effects.py`)
-- effect 유형: RECOMMEND, REQUIRE, REQUIRE_ALARM, REQUIRE_INTERLOCK, REVIEW, GENERATE_TEST
-- 각 effect → DesignDecision(decision_type, subject_type, value, risk_level) 매핑
-- 알 수 없는 effect 유형은 DomainError
-- ✓ 유형별 실행 테스트
+**설계 원칙:** 도메인 산출물(SensorRequirement 등)은 구조화된 상세를 담고,
+근거·추적은 `decision = FK(DesignDecision)`로 단일화한다. Design Engine 서비스가
+`create_design_decision`으로 결정을 남긴 뒤 산출물을 생성한다.
 
-## T3.2 Rule Matcher + Engine (`design/rule_engine.py`)
-- `match_rules(state)` — is_active 규칙 중 conditions_json이 참인 것, priority 정렬
-- `apply_rules(project, actor)` — 매칭 규칙의 effects를 실행해 DesignDecision 생성
-  (입력 Fact = 조건에서 참조된 활성 Fact, rule/knowledge 연결로 Traceability 확보)
-- 재실행 시 규칙당 기존 Decision을 SUPERSEDED 처리(idempotent, 파괴적 갱신 금지)
-- ✓ 매칭/미매칭 테스트, 재실행 idempotency 테스트
+## T4A.1 sensors 앱 — Sensor Design (§14 파이프라인)
+- `SensorRequirement`: measurement_type → principle → technology → signal_type →
+  accuracy → range → response_time → material_compat → env_rating →
+  install_constraints → maintenance → comm_requirements (+ decision FK)
+- `SensorCandidate`: vendor/model/rationale + rejected/reject_reason
+- `services.generate_sensor_requirements(project)` — MEASUREMENT_REQUIREMENTS Fact +
+  환경 Fact(STEAM/부식/위생 등) 기반 결정론적 원리 선정, 지식 후보 연결
+- ✓ 증기+연속레벨 → RADAR/4-20mA·HART, 근거 추적 테스트
 
-## T3.3 Hard Rule / Recommendation 구분
-- Hard Rule 효과는 override_allowed=False로 표기, 사용자 무시 시도 시 거부
-- Recommendation은 override 가능(+AuditEvent 기록)
-- ✓ Hard override 거부 / Recommendation override 허용 테스트
+## T4A.2 io_points 앱 — I/O Estimation
+- `IOPoint`: tag, signal_type(DI/DO/AI/AO), description, device/sensor 참조, decision FK
+- `services.estimate_io(project)` — DEVICE_LIST + 센서요구 → I/O 생성 + 수량 집계
+- 중복 태그 방지, 여유율 별도(PLC Sizing에서 반영)
+- ✓ 설비/센서 → DI/DO/AI/AO 수량 산출 테스트
 
-## T3.4 Conflict Detection
-- 동일 (subject_type, subject_id)에 서로 다른 값을 지정하는 규칙 → 충돌 기록
-- Hard vs Recommendation 충돌 시 Hard 우선, 양쪽 근거 보존
-- ✓ 충돌 탐지 테스트
+## T4A.3 plc_design 앱 — PLC Sizing (§15)
+- `PLCSizingResult`: DI/DO/AI/AO 수량 + §15 요소(고속카운터/모션/PID/Safety/이중화/
+  확장여유/기존벤더 등) + required_class + min_spec_json + selection_reason
+- `PLCCandidate`: vendor/family + accepted + reason (Rejected Candidates and Reasons 포함)
+- `services.size_plc(project)` — I/O 집계 + 여유율 + Fact 반영 → 등급·후보 산출
+- ✓ I/O 수량·기존벤더 Fact → 등급/후보/탈락사유 테스트
 
-## T3.5 §12 예시 규칙 시드 (`design/rules_seed.py` + `load_rules`)
-- 증기 환경 탱크 연속 레벨 → Radar + AI + High/Low Alarm + Overflow Review + HMI Trend
-  + FAT/SAT Test (8개 효과)
-- ⚠️ Safety 관련(Alarm/Interlock/Overflow) 규칙은 전문가 검토 대상(D6)
-- ✓ 규칙 적용 시 8개 효과 전부 DesignDecision 생성 + 근거 연결 검증
+## T4A.4 오케스트레이션 API
+- `POST /api/projects/{id}/generate-design/?stage=sensor|io|plc|all` (4-A 범위: sensor/io/plc)
+- 재실행 idempotent(이전 산출물 대체), 결과 요약 반환
+- ✓ end-to-end: 인터뷰 상태 → apply-rules → generate-design → 산출물 + Traceability
 
-## T3.6 §27 초기 지식 데이터 (`knowledge/knowledge_seed.py` + `load_knowledge`)
-- Industry 5, Process 10, Device 10, Sensor 10 (KnowledgeItem)
-- ✓ 로드 + idempotent 테스트
-
-## T3.7 API — 규칙 적용
-- `POST /api/projects/{id}/apply-rules/` → 생성된 DesignDecision + 충돌 리포트
-- 규칙이 참조한 지식 항목을 Decision에 연결
-- ✓ API 테스트 (§12 시나리오 end-to-end)
-
-## Phase 3 Exit Checklist
+## Phase 4-A Exit Checklist
 - [ ] 전체 pytest green, ruff clean, 마이그레이션 drift 없음
-- [ ] §12 예시 규칙의 8개 효과가 근거와 함께 DesignDecision으로 기록됨
-- [ ] Hard Rule override 거부 동작
-- [ ] 규칙/지식 버전 변경 시 기존 Decision SUPERSEDED
-- [ ] §27 지식 데이터 로드 가능
-- [ ] WORKLOG.md 갱신 + 사용자 승인 (Safety 규칙 검토 요청)
+- [ ] 센서→I/O→PLC 체인이 근거(Fact/규칙/지식)까지 역추적 가능
+- [ ] PLC Sizing 출력에 Rejected Candidates and Reasons 포함
+- [ ] WORKLOG.md 갱신 + 사용자 승인 → Phase 4-B

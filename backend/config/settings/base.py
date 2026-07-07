@@ -31,6 +31,9 @@ INSTALLED_APPS = [
     "apps.requirements",
     "apps.knowledge",
     "apps.design",
+    "apps.sensors",
+    "apps.io_points",
+    "apps.plc_design",
     "apps.audit",
 ]
 

@@ -123,3 +123,25 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 4 (Design Engine) 착수
+
+## 2026-07-07 — Phase 4-A: Design Engine (Sensor · I/O · PLC Sizing)
+- **T4A.1** `sensors` 앱 — SensorRequirement(§14 파이프라인 필드) + SensorCandidate.
+  `design_rules.select_sensor_profile`로 측정항목+환경(증기/부식/위생/CIP)→원리 결정론적 선정.
+  근거는 decision FK로 단일화(Fact+지식 연결)
+- **T4A.2** `io_points` 앱 — IOPoint(DI/DO/AI/AO). 설비별 표준 I/O 프로파일 + 센서 신호 →
+  I/O 산출, 태그 유일성 보장, 수량 집계
+- **T4A.3** `plc_design` 앱 — PLCSizingResult(§15 요소: PID/Safety/이중화/확장여유/기존벤더) +
+  PLCCandidate. 등급 판정 + Rejected Candidates and Reasons
+- **T4A.4** `design/orchestrator.generate_design` + `POST /projects/{id}/generate-design/`
+  (stage=sensor|io|plc|all), 재실행 idempotent. 산출물 읽기 API 3종
+- 산출물은 decision FK로 원 Fact/규칙/지식까지 역추적 가능(Traceability 체인)
+
+### 검증 결과 (컨테이너 내 실측)
+- pytest **94 passed**, ruff clean, 마이그레이션 drift 없음
+- 라이브 end-to-end(식품 CIP 탱크): 센서 LEVEL→RADAR(증기)·TEMP→RTD, 둘 다 IP69K+위생 반영 →
+  I/O DI6/DO3/AI3/AO1(13점) → PLC MODULAR(Safety I/O 반영), LS ELECTRIC 채택·
+  Siemens/Mitsubishi 탈락사유 명시
+- Traceability 체인 테스트: 센서 유래 I/O → SensorRequirement → DesignDecision → 입력 Fact 역추적
+
+### 다음 단계
+- 사용자 승인 후 Phase 4-B (Communication · HMI) 착수

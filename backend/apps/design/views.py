@@ -3,7 +3,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.design import rule_engine, services
+from apps.design import orchestrator, rule_engine, services
 from apps.design.models import DesignDecision, Rule
 from apps.design.serializers import (
     DesignDecisionCreateSerializer,
@@ -63,3 +63,13 @@ class ApplyRulesView(viewsets.ViewSet):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+class GenerateDesignView(viewsets.ViewSet):
+    """POST /api/projects/{project_pk}/generate-design/?stage=sensor|io|plc|all"""
+
+    def create(self, request, project_pk=None):
+        project = get_object_or_404(Project, pk=project_pk)
+        stage = request.query_params.get("stage", "all")
+        summary = orchestrator.generate_design(project=project, stage=stage, actor=request.user)
+        return Response({"stage": stage, "summary": summary}, status=status.HTTP_201_CREATED)

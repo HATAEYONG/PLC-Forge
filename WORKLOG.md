@@ -145,3 +145,22 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 4-B (Communication · HMI) 착수
+
+## 2026-07-07 — Phase 4-B: Design Engine (Communication · HMI)
+- **T4B.1** `communications` 앱 — CommNode/CommLink/ProtocolRequirement. CONTROL_MODE/
+  HMI/COMM_TARGETS/SCADA/MES/원격 Fact → 노드·링크·요구 생성. 네트워크 세그먼트
+  4종, 인버터/서보 링크는 통신 두절 시 SAFE_STATE, SCADA→OPC UA, MES→게이트웨이+MQTT
+- **T4B.2** `hmi_design` 앱 — HMIScreen/HMITag. 기본 7화면 + 조건부 화면
+  (AUTO_SEQUENCE/TREND/RECIPE/IO_MONITOR/INTERLOCK_STATUS/COMM_STATUS/REPORT/MAINTENANCE)만
+  생성. 화면별 보안등급, I/O Monitor는 IOPoint에서 태그 파생
+- **T4B.3** orchestrator STAGE_ORDER 확장(sensor→io→plc→comm→hmi), 읽기 API 4종
+- 산출물은 decision FK로 Traceability 확보
+
+### 검증 결과 (컨테이너 내 실측)
+- pytest **104 passed**, ruff clean, 마이그레이션 drift 없음
+- 라이브 end-to-end(식품 라인): 통신 노드 6·링크 5(인버터 SAFE_STATE, SCADA OPC UA,
+  MES 게이트웨이+MQTT) + 프로토콜 요구 3종(GATEWAY/MQTT/OPC_UA), HMI 조건부 13화면 생성
+- 조건부 화면 테스트: RECIPE_REQUIRED 없음→미생성, 설정 시 생성
+
+### 다음 단계
+- 사용자 승인 후 Phase 4-C (Alarm · Interlock · Sequence · FAT/SAT) 착수

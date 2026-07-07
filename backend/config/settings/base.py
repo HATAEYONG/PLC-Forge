@@ -34,6 +34,8 @@ INSTALLED_APPS = [
     "apps.sensors",
     "apps.io_points",
     "apps.plc_design",
+    "apps.communications",
+    "apps.hmi_design",
     "apps.audit",
 ]
 

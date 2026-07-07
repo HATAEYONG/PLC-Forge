@@ -14,5 +14,7 @@ urlpatterns = [
     path("api/", include("apps.sensors.urls")),
     path("api/", include("apps.io_points.urls")),
     path("api/", include("apps.plc_design.urls")),
+    path("api/", include("apps.communications.urls")),
+    path("api/", include("apps.hmi_design.urls")),
     path("api/", include("apps.audit.urls")),
 ]

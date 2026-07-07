@@ -1,41 +1,34 @@
-# TASKS.md — Phase 4-A: Design Engine (Sensor · I/O · PLC Sizing)
+# TASKS.md — Phase 4-B: Design Engine (Communication · HMI)
 
-**목표:** 규칙이 만든 요구/추천과 ProjectFact를 실제 설계 산출물로 구체화한다.
+**목표:** 규칙 결과와 설계 상태로 통신 구성(§16)과 HMI 화면 구조(§17)를 생성한다.
 각 산출물은 DesignDecision(Traceability)로 근거를 남긴다. (이전 내역은 WORKLOG.md 참조)
 
-**설계 원칙:** 도메인 산출물(SensorRequirement 등)은 구조화된 상세를 담고,
-근거·추적은 `decision = FK(DesignDecision)`로 단일화한다. Design Engine 서비스가
-`create_design_decision`으로 결정을 남긴 뒤 산출물을 생성한다.
+## T4B.1 communications 앱 — Communication Design (§16)
+- `CommNode`: PLC/HMI/Remote I/O/Inverter/SCADA/Gateway/MES 노드
+- `CommLink`: 노드 간 링크(프로토콜, 네트워크 세그먼트, 매체, 장애거동)
+- `ProtocolRequirement`: OPC UA/MQTT/게이트웨이/시간동기 요구
+- `services.generate_communication(project)` — CONTROL_MODE/HMI_REQUIRED/COMM_TARGETS/
+  SCADA/MES/원격모니터링 Fact + 인버터통신 결정 → 노드·링크·요구 생성
+- Device Communication Matrix, Protocol Compatibility, Failure Behavior, 통신 알람 반영
+- ✓ 인버터→필드버스 링크, HMI 링크, SCADA/OPC UA 요구 테스트
 
-## T4A.1 sensors 앱 — Sensor Design (§14 파이프라인)
-- `SensorRequirement`: measurement_type → principle → technology → signal_type →
-  accuracy → range → response_time → material_compat → env_rating →
-  install_constraints → maintenance → comm_requirements (+ decision FK)
-- `SensorCandidate`: vendor/model/rationale + rejected/reject_reason
-- `services.generate_sensor_requirements(project)` — MEASUREMENT_REQUIREMENTS Fact +
-  환경 Fact(STEAM/부식/위생 등) 기반 결정론적 원리 선정, 지식 후보 연결
-- ✓ 증기+연속레벨 → RADAR/4-20mA·HART, 근거 추적 테스트
+## T4B.2 hmi_design 앱 — HMI Design (§17)
+- `HMIScreen`: name/purpose/user_role/security_level + required_tags/commands/
+  status/alarm/trend objects + navigation
+- `HMITag`: 태그명/신호/소스(IOPoint/Alarm) 연결
+- `services.generate_hmi(project)` — 설계 상태 조건별로 **필요한 화면만** 생성
+  (기본 세트 + Trend는 TREND_REQUIRED, Recipe는 RECIPE_REQUIRED,
+  Interlock/Alarm은 Safety 요구, I/O Monitor는 I/O 존재 시 등)
+- HMI 태그는 IOPoint에서 파생
+- ✓ 조건부 화면 생성 테스트(Recipe 없음→미생성, 있음→생성)
 
-## T4A.2 io_points 앱 — I/O Estimation
-- `IOPoint`: tag, signal_type(DI/DO/AI/AO), description, device/sensor 참조, decision FK
-- `services.estimate_io(project)` — DEVICE_LIST + 센서요구 → I/O 생성 + 수량 집계
-- 중복 태그 방지, 여유율 별도(PLC Sizing에서 반영)
-- ✓ 설비/센서 → DI/DO/AI/AO 수량 산출 테스트
+## T4B.3 오케스트레이션 확장
+- STAGE_ORDER에 comm, hmi 추가 (sensor→io→plc→comm→hmi)
+- 읽기 API: comm-nodes/comm-links/hmi-screens
+- ✓ generate-design?stage=all end-to-end
 
-## T4A.3 plc_design 앱 — PLC Sizing (§15)
-- `PLCSizingResult`: DI/DO/AI/AO 수량 + §15 요소(고속카운터/모션/PID/Safety/이중화/
-  확장여유/기존벤더 등) + required_class + min_spec_json + selection_reason
-- `PLCCandidate`: vendor/family + accepted + reason (Rejected Candidates and Reasons 포함)
-- `services.size_plc(project)` — I/O 집계 + 여유율 + Fact 반영 → 등급·후보 산출
-- ✓ I/O 수량·기존벤더 Fact → 등급/후보/탈락사유 테스트
-
-## T4A.4 오케스트레이션 API
-- `POST /api/projects/{id}/generate-design/?stage=sensor|io|plc|all` (4-A 범위: sensor/io/plc)
-- 재실행 idempotent(이전 산출물 대체), 결과 요약 반환
-- ✓ end-to-end: 인터뷰 상태 → apply-rules → generate-design → 산출물 + Traceability
-
-## Phase 4-A Exit Checklist
+## Phase 4-B Exit Checklist
 - [ ] 전체 pytest green, ruff clean, 마이그레이션 drift 없음
-- [ ] 센서→I/O→PLC 체인이 근거(Fact/규칙/지식)까지 역추적 가능
-- [ ] PLC Sizing 출력에 Rejected Candidates and Reasons 포함
-- [ ] WORKLOG.md 갱신 + 사용자 승인 → Phase 4-B
+- [ ] 필요한 HMI 화면만 조건부 생성됨
+- [ ] 통신 구성이 근거(Fact/결정)까지 역추적 가능
+- [ ] WORKLOG.md 갱신 + 사용자 승인 → Phase 4-C

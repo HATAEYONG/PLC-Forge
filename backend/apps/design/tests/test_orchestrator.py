@@ -32,6 +32,9 @@ def seed_food_tank_project(project):
     set_fact(project, "STEAM_PRESENT_DURING_CIP", True, ValueType.BOOLEAN)
     set_fact(project, "CIP_REQUIRED", True, ValueType.BOOLEAN)
     set_fact(project, "EXISTING_PLC_VENDOR", "LS", ValueType.STRING)
+    set_fact(project, "HMI_REQUIRED", True, ValueType.BOOLEAN)
+    set_fact(project, "INVERTER_USED", True, ValueType.BOOLEAN)
+    set_fact(project, "CONTROL_MODE", "AUTO", ValueType.STRING)
 
 
 @pytest.mark.django_db
@@ -43,6 +46,8 @@ def test_generate_design_all_stages_api(api_client, project):
     assert summary["sensor"]["count"] == 2
     assert summary["io"]["total"] > 0
     assert summary["plc"]["required_class"]
+    assert summary["comm"]["nodes"] >= 2
+    assert summary["hmi"]["screens"] > 0
 
     # 산출물 조회 + Traceability 체인 (I/O → sensor requirement → decision → fact)
     sensors = api_client.get(f"/api/sensor-requirements/?project={project.id}").json()
@@ -73,6 +78,6 @@ def test_full_traceability_chain(project):
 
 @pytest.mark.django_db
 def test_unknown_stage_rejected(api_client, project):
-    response = api_client.post(f"/api/projects/{project.id}/generate-design/?stage=hmi")
+    response = api_client.post(f"/api/projects/{project.id}/generate-design/?stage=nonsense")
     assert response.status_code == 400
     assert response.json()["error"]["code"] == "unknown_stage"

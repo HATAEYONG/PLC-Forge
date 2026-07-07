@@ -4,13 +4,15 @@
 Phase 4-A 범위: sensor → io → plc. (communication/hmi/alarm 등은 Phase 4-B/4-C)
 """
 
+from apps.communications.services import generate_communication
+from apps.hmi_design.services import generate_hmi
 from apps.io_points.services import estimate_io
 from apps.plc_design.services import size_plc
 from apps.sensors.services import generate_sensor_requirements
 from core.exceptions import DomainError
 
 # 각 stage의 의존 순서 (앞 단계 산출물이 뒤 단계 입력이 됨)
-STAGE_ORDER = ["sensor", "io", "plc"]
+STAGE_ORDER = ["sensor", "io", "plc", "comm", "hmi"]
 
 
 def generate_design(*, project, stage="all", actor=None):
@@ -32,4 +34,8 @@ def generate_design(*, project, stage="all", actor=None):
                 "required_class": sizing.required_class,
                 "candidates": sizing.candidates.count(),
             }
+        elif current == "comm":
+            summary["comm"] = generate_communication(project=project, actor=actor)
+        elif current == "hmi":
+            summary["hmi"] = generate_hmi(project=project, actor=actor)
     return summary

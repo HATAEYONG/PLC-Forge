@@ -210,3 +210,24 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 6 (Frontend) 착수
+
+## 2026-07-07 — Phase 6-A: Frontend (인증 · 프로젝트 · 적응형 인터뷰)
+- **T6A.1** `api/client.ts` — JWT 토큰 주입(localStorage), get/post/patch,
+  통일 오류 포맷 → ApiRequestError. `auth/AuthContext` 로그인/로그아웃/사용자 로드
+- **T6A.2** 라우팅(react-router) + RequireAuth 보호 라우트, Layout 헤더
+- **T6A.3** 로그인 화면 (토큰 발급→저장→리다이렉트, 오류 표시)
+- **T6A.4** 프로젝트 목록/생성 + 회사 선택/생성
+- **T6A.5** 적응형 인터뷰 — 세션 시작/재개, next-question(선택 이유 표시),
+  질문 유형별 위젯(TEXT/YES_NO/SINGLE·MULTI_CHOICE/INTEGER/DECIMAL/UNIT_VALUE/DEVICE_LIST),
+  답변 제출→생성 Fact 칩 표시, 종료조건 체크리스트/진행률
+- Phase 0 플레이스홀더(HomePage/HealthStatus) 제거
+
+### 검증 결과 (컨테이너 내 실측)
+- vitest **8 passed**(QuestionWidget 5 + api client 3), tsc/prettier clean,
+  eslint 0 errors, 프로덕션 빌드 성공
+- **실제 브라우저 E2E 스모크(Playwright)**: 로그인 → 프로젝트 생성 → 인터뷰 화면 →
+  첫 적응형 질문(CRITICAL 안전질문) 표시 → 선택 이유 표시 → 종료조건 체크리스트 렌더 전부 통과
+- 참고: E2E용 playwright는 6-C에서 @playwright/test로 정식 도입 예정(6-A 커밋에서는 제외)
+
+### 다음 단계
+- 사용자 승인 후 Phase 6-B (설계 미리보기 · Validation · 승인 UI) 착수

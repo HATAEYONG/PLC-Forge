@@ -1,12 +1,36 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import HomePage from './pages/HomePage'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import Layout from './components/Layout'
+import { AuthProvider, useAuth } from './auth/AuthContext'
+import InterviewPage from './pages/InterviewPage'
+import LoginPage from './pages/LoginPage'
+import ProjectsPage from './pages/ProjectsPage'
+import type { JSX } from 'react'
+
+function RequireAuth({ children }: { children: JSX.Element }) {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="container">불러오는 중…</div>
+  if (!user) return <Navigate to="/login" replace />
+  return children
+}
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            element={
+              <RequireAuth>
+                <Layout />
+              </RequireAuth>
+            }
+          >
+            <Route path="/" element={<ProjectsPage />} />
+            <Route path="/projects/:id" element={<InterviewPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }

@@ -93,3 +93,33 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 3 (Knowledge & Rule Engine) 착수
+
+## 2026-07-07 — Phase 3: Knowledge & Rule Engine (사용자 승인 후 착수)
+- **T3.1** `design/effects.py` — Effect 어휘 6종(RECOMMEND/REQUIRE/REQUIRE_ALARM/
+  REQUIRE_INTERLOCK/REVIEW/GENERATE_TEST) → DesignDecision 매핑. 안전 성격 효과는
+  최소 위험도 HIGH로 승격(Human Approval 유도)
+- **T3.2** `design/rule_engine.py` — `match_rules`(조건 매칭) + `apply_rules`
+  (효과 실행). 조건이 참조한 활성 Fact + 규칙 + 지식을 결정에 연결(Traceability).
+  재실행 idempotent(이전 미확정 결정 SUPERSEDED)
+- **T3.3** Hard/Recommendation 구분 — Hard 결과 override_allowed=False,
+  `override_decision`이 Hard 무시 시도를 409로 거부
+- **T3.4** Conflict Detection — 동일 (subject_type, subject_id)에 상이한 값 지정 시 충돌 보고
+- **T3.5** `design/rules_seed.py` + `load_rules` — PRD §12 예시 규칙(증기→Radar) 등 3종.
+  ⚠️ Safety 효과 포함 규칙은 전문가 검토 대상(D6)
+- **T3.6** `knowledge/knowledge_seed.py` + `load_knowledge` — §27 지식 35건
+  (Industry 5/Process 10/Device 10/Sensor 10)
+- **T3.7** `POST /api/projects/{id}/apply-rules/` + `POST /design-decisions/{id}/override/`
+
+### 검증 결과 (컨테이너 내 실측)
+- pytest **78 passed**, ruff clean, 마이그레이션 drift 없음
+- 라이브 §12 end-to-end: 증기+연속레벨 Fact 3종 입력 → RULE-LEVEL-RADAR-STEAM 매칭 →
+  결정 8건 생성(각 근거 Fact3+규칙1+지식1). 알람2·오버플로리뷰는 risk=HIGH·승인필요=True로
+  승격. Hard Rule override 시도가 409 hard_rule_override_forbidden으로 거부됨
+- load_knowledge 35건 / load_rules 3건 idempotent 로드 확인
+
+### ⚠️ 사용자 검토 요청 (D6, PRD §33-15)
+- Safety 효과를 포함한 규칙(RULE-LEVEL-RADAR-STEAM의 알람/오버플로, RULE-ESTOP-SAFETY-IO)은
+  전문가 검토 후 확정 필요. `backend/apps/design/rules_seed.py` 참조
+
+### 다음 단계
+- 사용자 승인 후 Phase 4 (Design Engine) 착수

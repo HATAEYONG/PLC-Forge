@@ -46,10 +46,22 @@ class DesignDecisionSerializer(serializers.ModelSerializer):
             "risk_level",
             "approval_required",
             "approval_status",
+            "generated_by_rule",
+            "override_allowed",
+            "overridden",
             "version",
             "created_at",
         ]
-        read_only_fields = ["id", "approval_required", "approval_status", "version", "created_at"]
+        read_only_fields = [
+            "id",
+            "approval_required",
+            "approval_status",
+            "generated_by_rule",
+            "override_allowed",
+            "overridden",
+            "version",
+            "created_at",
+        ]
 
 
 class DesignDecisionCreateSerializer(serializers.Serializer):

@@ -1,13 +1,16 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from apps.design import services
+from apps.design import rule_engine, services
 from apps.design.models import DesignDecision, Rule
 from apps.design.serializers import (
     DesignDecisionCreateSerializer,
     DesignDecisionSerializer,
     RuleSerializer,
 )
+from apps.projects.models import Project
 
 
 class RuleViewSet(viewsets.ModelViewSet):
@@ -36,3 +39,27 @@ class DesignDecisionViewSet(
         serializer.is_valid(raise_exception=True)
         decision = services.create_design_decision(**serializer.validated_data, actor=request.user)
         return Response(DesignDecisionSerializer(decision).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"])
+    def override(self, request, pk=None):
+        decision = self.get_object()
+        decision = rule_engine.override_decision(
+            decision=decision, actor=request.user, reason=request.data.get("reason", "")
+        )
+        return Response(DesignDecisionSerializer(decision).data)
+
+
+class ApplyRulesView(viewsets.ViewSet):
+    """POST /api/projects/{project_pk}/apply-rules/ — 규칙 엔진 실행."""
+
+    def create(self, request, project_pk=None):
+        project = get_object_or_404(Project, pk=project_pk)
+        result = rule_engine.apply_rules(project=project, actor=request.user)
+        return Response(
+            {
+                "matched_rules": result["matched_rules"],
+                "decisions": DesignDecisionSerializer(result["decisions"], many=True).data,
+                "conflicts": result["conflicts"],
+            },
+            status=status.HTTP_201_CREATED,
+        )

@@ -25,6 +25,30 @@ def evaluate(logic, data):
     return bool(_apply(logic, data or {}))
 
 
+def referenced_vars(logic) -> set:
+    """조건식이 참조하는 var 키 집합을 추출한다 (Traceability용)."""
+    keys = set()
+    _collect_vars(logic, keys)
+    return keys
+
+
+def _collect_vars(logic, keys):
+    if not isinstance(logic, dict) or not logic:
+        return
+    operator, args = next(iter(logic.items()))
+    if operator == "var":
+        if isinstance(args, str):
+            keys.add(args)
+        return
+    if operator == "missing":
+        for key in args if isinstance(args, list) else [args]:
+            if isinstance(key, str):
+                keys.add(key)
+        return
+    for arg in args if isinstance(args, list) else [args]:
+        _collect_vars(arg, keys)
+
+
 def _apply(logic, data):
     if logic is None or logic == {}:
         return True

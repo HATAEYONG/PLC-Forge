@@ -85,6 +85,17 @@ class DesignDecision(BaseModel):
         max_length=10, choices=ApprovalStatus.choices, default=ApprovalStatus.DRAFT
     )
     version = models.PositiveIntegerField(default=1)
+    # Rule Engine이 생성한 결정을 재실행 시 idempotent하게 갱신하기 위한 추적 필드
+    generated_by_rule = models.ForeignKey(
+        Rule,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="generated_decisions",
+    )
+    # Hard Rule 결과는 override_allowed=False. Recommendation은 override 가능.
+    override_allowed = models.BooleanField(default=True)
+    overridden = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]

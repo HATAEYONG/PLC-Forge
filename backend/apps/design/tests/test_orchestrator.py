@@ -48,6 +48,8 @@ def test_generate_design_all_stages_api(api_client, project):
     assert summary["plc"]["required_class"]
     assert summary["comm"]["nodes"] >= 2
     assert summary["hmi"]["screens"] > 0
+    assert summary["sequence"]["sequences"] == 1
+    assert summary["test"]["total"] > 0
 
     # 산출물 조회 + Traceability 체인 (I/O → sensor requirement → decision → fact)
     sensors = api_client.get(f"/api/sensor-requirements/?project={project.id}").json()

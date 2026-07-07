@@ -164,3 +164,26 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 4-C (Alarm · Interlock · Sequence · FAT/SAT) 착수
+
+## 2026-07-07 — Phase 4-C: Design Engine (Alarm · Interlock · Sequence · FAT/SAT)
+- **T4C.1** `alarms` 앱 — Alarm(§18 전체 필드). ALARM_REQUIREMENT 결정 + 통신 링크 →
+  구조화 알람 materialize
+- **T4C.2** `interlocks` 앱 — Interlock(§18). INTERLOCK_REQUIREMENT 결정 → materialize,
+  Safety 인터록은 safety_related + bypass 권한 정책 필수. **Cause & Effect Matrix** selector
+- **T4C.3** `sequences` 앱 — Sequence/SequenceStep(§19). CONTROL_MODE AUTO/SEMI →
+  Vendor Independent 3단계(준비-운전-정지) 초안, 타임아웃·abort·hold/resume 포함
+- **T4C.4** `fat_sat` 앱 — TestCase(§24). 센서·알람·인터록·시퀀스 → FAT/SAT 테스트 자동
+  생성, source_type/source_ref로 원 산출물 역추적, 실행 결과 기록 API
+- **T4C.5** orchestrator STAGE_ORDER 완성(sensor→io→plc→comm→hmi→alarm→sequence→test),
+  C&E 매트릭스 엔드포인트, 읽기 API 4종
+- **→ Phase 4 (Design Engine) 완성: PRD §13의 13종 산출물 전부 생성**
+
+### 검증 결과 (컨테이너 내 실측)
+- pytest **114 passed**, ruff clean, 마이그레이션 drift 없음
+- 라이브 end-to-end(식품 CIP 탱크): apply-rules → generate-design(all) →
+  센서2·I/O10·PLC(MODULAR)·통신·HMI10·알람·인터록(ESTOP)·시퀀스(3스텝)·FAT7/SAT4 생성
+- Cause & Effect Matrix 도출, FAT/SAT가 ALARM/INTERLOCK/SENSOR/SEQUENCE로 역추적됨
+- Safety 인터록(ESTOP) bypass 권한 정책 확인
+
+### 다음 단계
+- 사용자 승인 후 Phase 5 (Validation & Approval) 착수

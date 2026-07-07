@@ -16,5 +16,9 @@ urlpatterns = [
     path("api/", include("apps.plc_design.urls")),
     path("api/", include("apps.communications.urls")),
     path("api/", include("apps.hmi_design.urls")),
+    path("api/", include("apps.alarms.urls")),
+    path("api/", include("apps.interlocks.urls")),
+    path("api/", include("apps.sequences.urls")),
+    path("api/", include("apps.fat_sat.urls")),
     path("api/", include("apps.audit.urls")),
 ]

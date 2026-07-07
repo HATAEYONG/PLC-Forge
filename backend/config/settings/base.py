@@ -36,6 +36,10 @@ INSTALLED_APPS = [
     "apps.plc_design",
     "apps.communications",
     "apps.hmi_design",
+    "apps.alarms",
+    "apps.interlocks",
+    "apps.sequences",
+    "apps.fat_sat",
     "apps.audit",
 ]
 

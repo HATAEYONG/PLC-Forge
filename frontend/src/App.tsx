@@ -1,8 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout'
 import { AuthProvider, useAuth } from './auth/AuthContext'
-import InterviewPage from './pages/InterviewPage'
 import LoginPage from './pages/LoginPage'
+import ProjectWorkspace from './pages/ProjectWorkspace'
 import ProjectsPage from './pages/ProjectsPage'
 import type { JSX } from 'react'
 
@@ -27,7 +27,7 @@ export default function App() {
             }
           >
             <Route path="/" element={<ProjectsPage />} />
-            <Route path="/projects/:id" element={<InterviewPage />} />
+            <Route path="/projects/:id" element={<ProjectWorkspace />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -1,18 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { api } from '../api/client'
-import { QuestionWidget } from '../components/QuestionWidget'
-import type { Paginated } from '../types/api'
+import { api } from '../../api/client'
+import { QuestionWidget } from '../../components/QuestionWidget'
+import type { Paginated } from '../../types/api'
 import type {
   AnswerResponse,
   InterviewSession,
   NextQuestionResponse,
   ProgressResponse,
   ProjectFact,
-} from '../types/domain'
+} from '../../types/domain'
 
-export default function InterviewPage() {
-  const { id: projectId } = useParams<{ id: string }>()
+export default function InterviewTab({ projectId }: { projectId: string }) {
   const [session, setSession] = useState<InterviewSession | null>(null)
   const [next, setNext] = useState<NextQuestionResponse | null>(null)
   const [progress, setProgress] = useState<ProgressResponse | null>(null)
@@ -69,21 +67,11 @@ export default function InterviewPage() {
     }
   }
 
-  if (error)
-    return (
-      <div className="container">
-        <p className="error-text">{error}</p>
-      </div>
-    )
-  if (!next || !progress)
-    return (
-      <div className="container">
-        <p className="muted">불러오는 중…</p>
-      </div>
-    )
+  if (error) return <p className="error-text">{error}</p>
+  if (!next || !progress) return <p className="muted">불러오는 중…</p>
 
   return (
-    <div className="container">
+    <>
       <div className="panel">
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <h2 style={{ margin: 0 }}>적응형 인터뷰</h2>
@@ -145,6 +133,6 @@ export default function InterviewPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   )
 }

@@ -231,3 +231,22 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 6-B (설계 미리보기 · Validation · 승인 UI) 착수
+
+## 2026-07-07 — Phase 6-B: Frontend (설계 미리보기 · Validation · 승인)
+- **T6B.1** 프로젝트 워크스페이스 탭(인터뷰/설계/검증/승인) — InterviewPage → InterviewTab 이동
+- **T6B.2** DesignTab — apply-rules + generate-design 실행, 산출물 미리보기
+  (센서·I/O(신호별 집계)·PLC(후보/탈락사유)·알람·인터록(safety)·시퀀스·Cause&Effect·
+  설계결정 근거[Fact/규칙/지식/신뢰도/위험])
+- **T6B.3** ValidationTab — validate 실행, 심각도별 카운트, CRITICAL 차단 경고, Finding 목록
+- **T6B.4** ApprovalTab — 11대상 submit-review + approve/reject, 상태 표시,
+  CRITICAL 차단 오류 표시
+- App 라우팅을 ProjectWorkspace로 전환
+
+### 검증 결과 (컨테이너 내 실측)
+- vitest **11 passed**(신규 ValidationTab/ApprovalTab 포함), tsc/prettier clean,
+  eslint 0 errors, 빌드 성공
+- **실제 브라우저 E2E(Playwright)**: 워크스페이스 진입 → 설계 생성(센서/PLC/C&E 렌더) →
+  검증 실행(CRITICAL 0) → 센서 설계 승인(APPROVED) 전부 통과
+
+### 다음 단계
+- 사용자 승인 후 Phase 6-C (Excel Export · Playwright E2E 정식화) 착수

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "apps.fat_sat",
     "apps.validation",
     "apps.approvals",
+    "apps.documents",
     "apps.audit",
 ]
 

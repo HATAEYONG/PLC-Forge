@@ -5,7 +5,8 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage'] },
+  // e2e/config는 Playwright(Node) 실행용 — 별도 lint 대상에서 제외
+  { ignores: ['dist', 'coverage', 'e2e', 'playwright.config.ts'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

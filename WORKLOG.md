@@ -250,3 +250,23 @@
 
 ### 다음 단계
 - 사용자 승인 후 Phase 6-C (Excel Export · Playwright E2E 정식화) 착수
+
+## 2026-07-07 — Phase 6-C: Excel Export · E2E 정식화 (Phase 6 완성)
+- **T6C.1** `documents` 앱 — openpyxl 기반 Excel Export. 시트: I/O List / Alarm /
+  Interlock / Cause&Effect / FAT / SAT. `GET /projects/{id}/export/` → .xlsx 스트리밍.
+  한글 셀 왕복 테스트 포함
+- **T6C.2** 프론트 `api/download.ts`(토큰 포함 blob 다운로드) + DesignTab Excel Export 버튼
+- **T6C.3** Playwright `@playwright/test` 정식 도입 — playwright.config(조건부 executablePath),
+  `e2e/happy-path.spec.ts`(로그인→인터뷰→설계생성→검증→승인→Export), `npm run e2e`,
+  CI에 e2e 잡 추가(postgres + 시드 + 서버 기동 + playwright install)
+- vitest include를 src로 한정(e2e 스펙 분리)
+
+### 검증 결과 (컨테이너 내 실측)
+- 백엔드 pytest **134 passed**(Export 4건 포함), ruff clean
+- 프론트 vitest **13 passed**(download 2건 포함), tsc/eslint/prettier clean, 빌드 성공
+- **Playwright 해피패스 통과**: 로그인 → 프로젝트 → 인터뷰 렌더 → 설계 생성(센서/PLC) →
+  검증(CRITICAL 0) → 센서 설계 승인(APPROVED) → Excel Export(.xlsx) 다운로드
+- **→ Phase 6 (Frontend) 완성**
+
+### 다음 단계
+- 사용자 승인 후 Phase 7 (LS ELECTRIC Adapter PoC) 착수

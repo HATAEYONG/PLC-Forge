@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client'
+import { downloadFile } from '../../api/download'
 import type { Paginated } from '../../types/api'
 import type {
   Alarm,
@@ -90,9 +91,21 @@ export default function DesignTab({ projectId }: { projectId: string }) {
       <div className="panel">
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <h2 style={{ margin: 0 }}>설계 생성</h2>
-          <button className="btn" onClick={run} disabled={busy}>
-            {busy ? '생성 중…' : '규칙 적용 + 설계 생성'}
-          </button>
+          <div className="row">
+            <button
+              className="btn secondary"
+              onClick={() =>
+                downloadFile(`/api/projects/${projectId}/export/`, 'PLC-Forge.xlsx').catch((e) =>
+                  setError(e instanceof Error ? e.message : 'Export 실패'),
+                )
+              }
+            >
+              ⬇ Excel Export
+            </button>
+            <button className="btn" onClick={run} disabled={busy}>
+              {busy ? '생성 중…' : '규칙 적용 + 설계 생성'}
+            </button>
+          </div>
         </div>
         {msg && <p className="muted">{msg}</p>}
         {error && <p className="error-text">{error}</p>}

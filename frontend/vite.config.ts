@@ -13,5 +13,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: './src/setupTests.ts',
+    // 단위 테스트는 src만. Playwright e2e는 `npm run e2e`로 별도 실행한다.
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 })

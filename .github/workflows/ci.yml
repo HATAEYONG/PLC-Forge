@@ -62,3 +62,58 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run test
       - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: plcforge
+          POSTGRES_USER: plcforge
+          POSTGRES_PASSWORD: plcforge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U plcforge"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      POSTGRES_DB: plcforge
+      POSTGRES_USER: plcforge
+      POSTGRES_PASSWORD: plcforge
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      DJANGO_SUPERUSER_PASSWORD: admin1234!
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Backend: 마이그레이션 + 시드 + 관리자 + 서버 기동
+      - run: pip install -r backend/requirements-dev.txt
+      - working-directory: backend
+        run: |
+          python manage.py migrate --noinput
+          python manage.py load_knowledge
+          python manage.py load_rules
+          python manage.py createsuperuser --noinput --username admin --email admin@example.com
+          python manage.py runserver 127.0.0.1:8000 &
+      # Frontend: 빌드 미리보기 서버 기동 + Playwright 브라우저 설치
+      - working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run build
+          npx vite preview --port 5173 --strictPort &
+      - name: Wait for servers
+        run: |
+          npx --yes wait-on http://127.0.0.1:8000/api/health/ http://127.0.0.1:5173/
+      # PW_CHROMIUM 미설정 → Playwright가 설치한 브라우저 사용
+      - name: Run Playwright happy path
+        working-directory: frontend
+        run: npm run e2e
